@@ -27,10 +27,7 @@ const login = async (req, res) => {
     }
 
     // Compare password
-    const isMatch = await bcrypt.compare(
-      password,
-      user.passwordHash
-    );
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
 
     if (!isMatch) {
       return res.status(401).json({
@@ -59,7 +56,6 @@ const login = async (req, res) => {
         email: user.email,
       },
     });
-
   } catch (error) {
     console.error(error);
 
@@ -70,6 +66,18 @@ const login = async (req, res) => {
   }
 };
 
+const me = async (req, res) => {
+  res.status(200).json({
+    success: true,
+    user: {
+      id: req.user.id,
+      name: req.user.name,
+      email: req.user.email,
+    },
+  });
+};
+
 module.exports = {
   login,
+  me,
 };
