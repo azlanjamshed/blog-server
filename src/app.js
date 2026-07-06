@@ -4,8 +4,8 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 
-const authRoutes = require("./routes/auth.routes");
-const categoryRoutes = require("./routes/category.routes");
+const authRoutes = require("./auth/auth.routes");
+const categoryRoutes = require("./category/category.routes");
 const app = express();
 
 app.use(cors());

@@ -8,7 +8,7 @@ const {
   getCategoryBySlug,
   updateCategory,
   deleteCategory,
-} = require("../controllers/category.controller");
+} = require("./category.controller");
 
 router.post("/", requireAuth, createCategory);
 router.get("/", getAllCategories);
