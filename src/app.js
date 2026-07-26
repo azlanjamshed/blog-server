@@ -7,6 +7,7 @@ const cookieParser = require("cookie-parser");
 const authRoutes = require("./auth/auth.routes");
 const categoryRoutes = require("./category/category.routes");
 const postRoutes = require("./post/post.routes");
+const publicPostRoutes = require("./post/public-post.routes");
 const app = express();
 
 app.use(cors());
@@ -17,6 +18,7 @@ app.use(morgan("dev"));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/posts", publicPostRoutes);
 app.use("/api/admin/posts", postRoutes);
 
 module.exports = app;
