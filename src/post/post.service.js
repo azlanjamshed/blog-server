@@ -9,6 +9,7 @@ const createPost = async ({
   coverImageUrl,
   categoryId,
   status = "DRAFT",
+  tagIds,
   authorId,
 }) => {
   // Check if category exists
@@ -21,6 +22,8 @@ const createPost = async ({
   if (!category) {
     throw new Error("Category not found");
   }
+
+  await validateTagIds(tagIds);
 
   // Generate unique slug
   const baseSlug = generateSlug(title);
@@ -51,6 +54,15 @@ const createPost = async ({
       publishedAt,
       authorId,
       categoryId,
+      ...(tagIds !== undefined && {
+        tags: {
+          create: tagIds.map((tagId) => ({
+            tag: {
+              connect: { id: tagId },
+            },
+          })),
+        },
+      }),
     },
     include: {
       author: {
@@ -61,18 +73,30 @@ const createPost = async ({
         },
       },
       category: true,
+      tags: {
+        include: {
+          tag: true,
+        },
+      },
     },
   });
 
   return post;
 };
 
-const getPublishedPosts = async ({ page, limit }) => {
+const getPublishedPosts = async ({ page, limit, tag }) => {
   const where = {
     status: "PUBLISHED",
     publishedAt: {
       not: null,
     },
+    ...(tag && {
+      tags: {
+        some: {
+          tag: { slug: tag },
+        },
+      },
+    }),
   };
 
   const [posts, total] = await Promise.all([
@@ -266,7 +290,9 @@ const updatePost = async (id, updates) => {
     }
   }
 
-  const data = { ...updates };
+  const { tagIds, ...data } = updates;
+
+  await validateTagIds(tagIds);
 
   if (updates.title && updates.title !== existingPost.title) {
     const baseSlug = generateSlug(updates.title);
@@ -300,6 +326,17 @@ const updatePost = async (id, updates) => {
     data.publishedAt = null;
   }
 
+  if (tagIds !== undefined) {
+    data.tags = {
+      deleteMany: {},
+      create: tagIds.map((tagId) => ({
+        tag: {
+          connect: { id: tagId },
+        },
+      })),
+    };
+  }
+
   return prisma.post.update({
     where: { id },
     data,
@@ -319,6 +356,22 @@ const updatePost = async (id, updates) => {
       },
     },
   });
+};
+
+const validateTagIds = async (tagIds) => {
+  if (tagIds === undefined || tagIds.length === 0) {
+    return;
+  }
+
+  const tagCount = await prisma.tag.count({
+    where: {
+      id: { in: tagIds },
+    },
+  });
+
+  if (tagCount !== tagIds.length) {
+    throw new Error("One or more tags were not found");
+  }
 };
 
 const deletePost = async (id) => {

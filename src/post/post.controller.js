@@ -2,7 +2,7 @@ const postService = require("./post.service");
 
 const createPost = async (req, res, next) => {
   try {
-    const { title, content, excerpt, coverImageUrl, categoryId, status } =
+    const { title, content, excerpt, coverImageUrl, categoryId, status, tagIds } =
       req.body;
 
     const post = await postService.createPost({
@@ -12,15 +12,26 @@ const createPost = async (req, res, next) => {
       coverImageUrl,
       categoryId,
       status,
+      tagIds,
       authorId: req.user.id,
     });
 
     return res.status(201).json({
       success: true,
       message: "Post created successfully",
-      data: post,
+      data: {
+        ...post,
+        tags: post.tags.map(({ tag }) => tag),
+      },
     });
   } catch (error) {
+    if (error.message === "Category not found" || error.message === "One or more tags were not found") {
+      return res.status(404).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
     next(error);
   }
 };
@@ -44,9 +55,19 @@ const getPublishedPosts = async (req, res, next) => {
       });
     }
 
+    const tag = req.query.tag;
+
+    if (tag !== undefined && (typeof tag !== "string" || !tag.trim())) {
+      return res.status(400).json({
+        success: false,
+        message: "tag must be a non-empty string",
+      });
+    }
+
     const { posts, total } = await postService.getPublishedPosts({
       page,
       limit,
+      tag: tag?.trim(),
     });
 
     return res.status(200).json({
@@ -118,7 +139,10 @@ const updatePost = async (req, res, next) => {
       },
     });
   } catch (error) {
-    if (error.message === "Category not found") {
+    if (
+      error.message === "Category not found" ||
+      error.message === "One or more tags were not found"
+    ) {
       return res.status(404).json({
         success: false,
         message: error.message,
