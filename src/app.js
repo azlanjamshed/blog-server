@@ -18,13 +18,7 @@ const allowedOrigins = [
   process.env.USER_URL,
   process.env.ADMIN_URL, // Admin
 ];
-app.get("/api/health", (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "Server is running",
-    timestamp: new Date().toISOString(),
-  });
-});
+
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -51,6 +45,7 @@ app.use(helmet());
 app.use(morgan("dev"));
 
 const requireAuth = require("./middleware/auth.middleware");
+const router = require("./auth/auth.routes");
 
 // Public routes
 app.use("/api/auth", authRoutes);
@@ -78,5 +73,7 @@ authorRouter.use("/upload", uploadRoutes);
 // Available as both /api/author and /api/admin for full compatibility
 app.use("/api/author", authorRouter);
 app.use("/api/admin", authorRouter);
+
+
 
 module.exports = app;
