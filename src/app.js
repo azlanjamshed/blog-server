@@ -74,6 +74,4 @@ authorRouter.use("/upload", uploadRoutes);
 app.use("/api/author", authorRouter);
 app.use("/api/admin", authorRouter);
 
-
-
 module.exports = app;

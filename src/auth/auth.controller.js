@@ -42,11 +42,11 @@ const login = async (req, res) => {
     // Store in httpOnly cookie
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false, // change to true in production (HTTPS)
-      sameSite: "lax",
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
     });
-
     return res.status(200).json({
       success: true,
       message: "Login successful",
