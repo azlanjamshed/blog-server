@@ -38,7 +38,7 @@ const login = async (req, res) => {
 
     // Generate token
     const token = generateToken(user.id);
-
+    const isProduction = process.env.NODE_ENV === "production";
     // Store in httpOnly cookie
     res.cookie("token", token, {
       httpOnly: true,
