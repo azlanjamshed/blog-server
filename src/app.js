@@ -14,24 +14,69 @@ const {
 } = require("./tag/tag.routes");
 const uploadRoutes = require("./upload/upload.routes");
 const app = express();
-
+const allowedOrigins = [
+  process.env.USER_URL,
+  process.env.ADMIN_URL, // Admin
+];
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Server is running",
+    timestamp: new Date().toISOString(),
+  });
+});
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: (origin, callback) => {
+      // Allow requests without an origin
+      // (Postman, mobile apps, server-to-server, etc.)
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   }),
 );
+
+// app.use(cors("*"));
 app.use(express.json());
 app.use(cookieParser());
 app.use(helmet());
 app.use(morgan("dev"));
 
+const requireAuth = require("./middleware/auth.middleware");
+
+// Public routes
 app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/posts", publicPostRoutes);
 app.use("/api/tags", tagRoutes);
-app.use("/api/admin/posts", postRoutes);
-app.use("/api/admin/tags", adminTagRoutes);
-app.use("/api/admin/upload", uploadRoutes);
+
+// Auth-protected author & admin router
+const authorRouter = express.Router();
+authorRouter.use(requireAuth);
+authorRouter.get("/me", (req, res) => {
+  return res.status(200).json({
+    success: true,
+    user: {
+      id: req.user.id,
+      name: req.user.name,
+      email: req.user.email,
+    },
+  });
+});
+authorRouter.use("/posts", postRoutes);
+authorRouter.use("/tags", adminTagRoutes);
+authorRouter.use("/upload", uploadRoutes);
+
+// Available as both /api/author and /api/admin for full compatibility
+app.use("/api/author", authorRouter);
+app.use("/api/admin", authorRouter);
 
 module.exports = app;

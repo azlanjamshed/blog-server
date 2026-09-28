@@ -167,7 +167,7 @@ const deleteCategory = async (req, res) => {
     });
 
     if (!category) {
-      res.status(404).json({
+      return res.status(404).json({
         success: false,
         message: "Category not found",
       });

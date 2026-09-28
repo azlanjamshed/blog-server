@@ -112,7 +112,10 @@ const getAllPosts = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       count: posts.length,
-      data: posts,
+      data: posts.map(({ tags, ...post }) => ({
+        ...post,
+        tags: tags ? tags.map(({ tag }) => tag) : [],
+      })),
     });
   } catch (error) {
     next(error);

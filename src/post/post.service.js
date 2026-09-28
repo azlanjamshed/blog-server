@@ -267,6 +267,17 @@ const getAllPosts = async () => {
           slug: true,
         },
       },
+      tags: {
+        select: {
+          tag: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
+        },
+      },
     },
   });
 };
